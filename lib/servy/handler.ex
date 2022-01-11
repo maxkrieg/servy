@@ -1,4 +1,7 @@
 defmodule Servy.Handler do
+
+  require Logger
+
   def handle(request) do
     request
     |> parse()
@@ -37,7 +40,10 @@ defmodule Servy.Handler do
 
   def rewrite_params(conv), do: conv
 
-  def log(conv), do: IO.inspect(conv, label: "Request")
+  def log(conv) do
+    Logger.info("Request #{inspect(conv)}")
+    conv
+  end
 
   def route(%{ path: "/wildthings", method: "GET" } = conv) do
     %{ conv | status: 200, resp_body: "Bears, Lions, and Tigers"}
@@ -60,7 +66,7 @@ defmodule Servy.Handler do
   end
 
   def track(%{status: 404, path: path} = conv) do
-    IO.puts("Warning: #{path} does not exist")
+    Logger.warn("Warning: #{path} does not exist")
     conv
   end
 
