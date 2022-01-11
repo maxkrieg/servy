@@ -61,6 +61,19 @@ defmodule Servy.Handler do
     %{ conv | status: 200, resp_body: "DELETE Bear #{id}"}
   end
 
+  def route(%{ path: "/about", method: "GET" } = conv) do
+    Path.expand("../../pages", __DIR__)
+    |> Path.join("about.html")
+    |> File.read()
+    |> handle_file(conv)
+  end
+
+  def handle_file({:ok, content}, conv), do: %{conv | status: 200, resp_body: content }
+
+  def handle_file({:error, :enoent}, conv), do: %{conv | status: 404, resp_body: "File Not Found"}
+
+  def handle_file({:error, reason}, conv), do: %{conv | status: 500, resp_body: "File error #{reason}"}
+
   def route(%{ path: path } = conv) do
     %{ conv | status: 404, resp_body: "No #{path} here" }
   end
@@ -102,6 +115,8 @@ defmodule Servy.Handler do
   end
 end
 
+
+# TODO: Convert all of these into unit tests
 
 request = """
 GET /wildthings HTTP/1.1
@@ -159,6 +174,16 @@ Accept: */*
 
 """
 
+request8 = """
+GET /about HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+# TODO: Convert to unit tests
+
 response = Servy.Handler.handle(request)
 response2 = Servy.Handler.handle(request2)
 response3 = Servy.Handler.handle(request3)
@@ -166,6 +191,7 @@ response4 = Servy.Handler.handle(request4)
 response5 = Servy.Handler.handle(request5)
 response6 = Servy.Handler.handle(request6)
 response7 = Servy.Handler.handle(request7)
+response8 = Servy.Handler.handle(request8)
 
 IO.puts("------------------")
 IO.puts(response)
@@ -181,3 +207,5 @@ IO.puts("------------------")
 IO.puts(response6)
 IO.puts("------------------")
 IO.puts(response7)
+IO.puts("------------------")
+IO.puts(response8)
