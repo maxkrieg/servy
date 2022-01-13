@@ -53,6 +53,11 @@ defmodule Servy.Handler do
     %{ conv | status: 200, resp_body: "Teddy, Smokey, Paddington"}
   end
 
+  def route(%{ path: "/bears/new", method: "GET" } = conv) do
+    open_file("form")
+    |> handle_file(conv)
+  end
+
   def route(%{ path: "/bears/" <> id, method: "GET" } = conv) do
     %{ conv | status: 200, resp_body: "GET Bear #{id}"}
   end
@@ -62,10 +67,23 @@ defmodule Servy.Handler do
   end
 
   def route(%{ path: "/about", method: "GET" } = conv) do
-    Path.expand("../../pages", __DIR__)
-    |> Path.join("about.html")
-    |> File.read()
+    open_file("about")
     |> handle_file(conv)
+  end
+
+  def route(%{ path: "/pages/" <> file, method: "GET" } = conv) do
+    open_file(file)
+    |> handle_file(conv)
+  end
+
+  def route(%{ path: path } = conv) do
+    %{ conv | status: 404, resp_body: "No #{path} here" }
+  end
+
+  def open_file(file) do
+    Path.expand("../../pages", __DIR__)
+    |> Path.join(file <> ".html")
+    |> File.read()
   end
 
   def handle_file({:ok, content}, conv), do: %{conv | status: 200, resp_body: content }
@@ -73,10 +91,6 @@ defmodule Servy.Handler do
   def handle_file({:error, :enoent}, conv), do: %{conv | status: 404, resp_body: "File Not Found"}
 
   def handle_file({:error, reason}, conv), do: %{conv | status: 500, resp_body: "File error #{reason}"}
-
-  def route(%{ path: path } = conv) do
-    %{ conv | status: 404, resp_body: "No #{path} here" }
-  end
 
   def track(%{status: 404, path: path} = conv) do
     Logger.warn("Warning: #{path} does not exist")
@@ -182,6 +196,14 @@ Accept: */*
 
 """
 
+request9 = """
+GET /bears/new HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
 # TODO: Convert to unit tests
 
 response = Servy.Handler.handle(request)
@@ -192,6 +214,7 @@ response5 = Servy.Handler.handle(request5)
 response6 = Servy.Handler.handle(request6)
 response7 = Servy.Handler.handle(request7)
 response8 = Servy.Handler.handle(request8)
+response9 = Servy.Handler.handle(request9)
 
 IO.puts("------------------")
 IO.puts(response)
@@ -209,3 +232,5 @@ IO.puts("------------------")
 IO.puts(response7)
 IO.puts("------------------")
 IO.puts(response8)
+IO.puts("------------------")
+IO.puts(response9)
