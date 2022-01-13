@@ -1,7 +1,15 @@
 defmodule Servy.Handler do
+  @moduledoc "Handles HTTP requests"
 
   require Logger
+  import Servy.Plugins, only: [rewrite_path: 1, rewrite_params: 1, log: 1, track: 1, emojify: 1]
+  import Servy.Parser, only: [parse: 1]
 
+  @pages_path Path.expand("../../pages", __DIR__)
+
+  @doc """
+  Request response pipe handler
+  """
   def handle(request) do
     request
     |> parse()
@@ -12,37 +20,6 @@ defmodule Servy.Handler do
     |> track()
     |> emojify()
     |> format_response()
-  end
-
-  def parse(request) do
-    [method, path, _] =
-      request
-      |> String.split("\n")
-      |> List.first()
-      |> String.split(" ")
-    %{
-      method: method,
-      path: path,
-      resp_body: "",
-      status: nil
-    }
-  end
-
-  def rewrite_path(%{ path: "/wildlife"} = conv) do
-    %{ conv | path: "/wildthings"}
-  end
-
-  def rewrite_path(conv), do: conv
-
-  def rewrite_params(%{ path: "/bears?id=" <> id } = conv) do
-    %{conv | path: "/bears/#{id}" }
-  end
-
-  def rewrite_params(conv), do: conv
-
-  def log(conv) do
-    Logger.info("Request #{inspect(conv)}")
-    conv
   end
 
   def route(%{ path: "/wildthings", method: "GET" } = conv) do
@@ -81,7 +58,7 @@ defmodule Servy.Handler do
   end
 
   def open_file(file) do
-    Path.expand("../../pages", __DIR__)
+    @pages_path
     |> Path.join(file <> ".html")
     |> File.read()
   end
@@ -91,21 +68,6 @@ defmodule Servy.Handler do
   def handle_file({:error, :enoent}, conv), do: %{conv | status: 404, resp_body: "File Not Found"}
 
   def handle_file({:error, reason}, conv), do: %{conv | status: 500, resp_body: "File error #{reason}"}
-
-  def track(%{status: 404, path: path} = conv) do
-    Logger.warn("Warning: #{path} does not exist")
-    conv
-  end
-
-  def track(conv), do: conv
-
-  def emojify(%{ status: 200, resp_body: resp_body } = conv) do
-    emojies = String.duplicate("😃", 5)
-    resp_body = emojies <> "\n" <> resp_body <> "\n" <> emojies
-    %{ conv | resp_body: resp_body}
-  end
-
-  def emojify(conv), do: conv
 
   def format_response(%{ resp_body: resp_body, status: status }) do
     """
