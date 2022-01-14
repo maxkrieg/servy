@@ -27,6 +27,10 @@ defmodule Servy.Handler do
     %{ conv | status: 200, resp_body: "Bears, Lions, and Tigers"}
   end
 
+  def route(%Conv{method: "POST", path: "/bears", params: params } = conv) do
+    %{ conv | status: 201, resp_body: "Create a #{params["type"]} bear named #{params["name"]}" }
+  end
+
   def route(%Conv{ path: "/bears", method: "GET" } = conv) do
     %{ conv | status: 200, resp_body: "Teddy, Smokey, Paddington"}
   end
@@ -156,33 +160,36 @@ Accept: */*
 
 """
 
+request10 = """
+POST /bears HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 21
+
+name=Baloo&type=Brown
+"""
+
 # TODO: Convert to unit tests
 
-response = Servy.Handler.handle(request)
-response2 = Servy.Handler.handle(request2)
-response3 = Servy.Handler.handle(request3)
-response4 = Servy.Handler.handle(request4)
-response5 = Servy.Handler.handle(request5)
-response6 = Servy.Handler.handle(request6)
-response7 = Servy.Handler.handle(request7)
-response8 = Servy.Handler.handle(request8)
-response9 = Servy.Handler.handle(request9)
+IO.puts("------------------")
+Servy.Handler.handle(request) |> IO.puts()
 
-IO.puts("------------------")
-IO.puts(response)
-IO.puts("------------------")
-IO.puts(response2)
-IO.puts("------------------")
-IO.puts(response3)
-IO.puts("------------------")
-IO.puts(response4)
-IO.puts("------------------")
-IO.puts(response5)
-IO.puts("------------------")
-IO.puts(response6)
-IO.puts("------------------")
-IO.puts(response7)
-IO.puts("------------------")
-IO.puts(response8)
-IO.puts("------------------")
-IO.puts(response9)
+Servy.Handler.handle(request2) |> IO.puts()
+
+Servy.Handler.handle(request3) |> IO.puts()
+
+Servy.Handler.handle(request4) |> IO.puts()
+
+Servy.Handler.handle(request5) |> IO.puts()
+
+Servy.Handler.handle(request6) |> IO.puts()
+
+Servy.Handler.handle(request7) |> IO.puts()
+
+Servy.Handler.handle(request8) |> IO.puts()
+
+Servy.Handler.handle(request9) |> IO.puts()
+
+Servy.Handler.handle(request10) |> IO.puts()
