@@ -2,9 +2,10 @@ defmodule Servy.Handler do
   @moduledoc "Handles HTTP requests"
 
   require Logger
+  alias Servy.Conv
+  alias Servy.BearController
   import Servy.Plugins, only: [rewrite_path: 1, rewrite_params: 1, log: 1, track: 1, emojify: 1]
   import Servy.Parser, only: [parse: 1]
-  alias Servy.Conv
 
   @pages_path Path.expand("pages", File.cwd!)
 
@@ -28,11 +29,11 @@ defmodule Servy.Handler do
   end
 
   def route(%Conv{method: "POST", path: "/bears", params: params } = conv) do
-    %{ conv | status: 201, resp_body: "Create a #{params["type"]} bear named #{params["name"]}" }
+    BearController.create(conv, params)
   end
 
   def route(%Conv{ path: "/bears", method: "GET" } = conv) do
-    %{ conv | status: 200, resp_body: "Teddy, Smokey, Paddington"}
+    BearController.index(conv)
   end
 
   def route(%Conv{ path: "/bears/new", method: "GET" } = conv) do
@@ -41,11 +42,13 @@ defmodule Servy.Handler do
   end
 
   def route(%Conv{ path: "/bears/" <> id, method: "GET" } = conv) do
-    %{ conv | status: 200, resp_body: "GET Bear #{id}"}
+    params = Map.put(conv.params, "id", id)
+    BearController.show(conv, params)
   end
 
   def route(%Conv{ path: "/bears/" <> id, method: "DELETE" } = conv) do
-    %{ conv | status: 200, resp_body: "DELETE Bear #{id}"}
+    params = Map.put(conv.params, "id", id)
+    BearController.delete(conv, params)
   end
 
   def route(%Conv{ path: "/about", method: "GET" } = conv) do
@@ -172,24 +175,14 @@ name=Baloo&type=Brown
 """
 
 # TODO: Convert to unit tests
-
 IO.puts("------------------")
 Servy.Handler.handle(request) |> IO.puts()
-
 Servy.Handler.handle(request2) |> IO.puts()
-
 Servy.Handler.handle(request3) |> IO.puts()
-
 Servy.Handler.handle(request4) |> IO.puts()
-
 Servy.Handler.handle(request5) |> IO.puts()
-
 Servy.Handler.handle(request6) |> IO.puts()
-
 Servy.Handler.handle(request7) |> IO.puts()
-
 Servy.Handler.handle(request8) |> IO.puts()
-
 Servy.Handler.handle(request9) |> IO.puts()
-
 Servy.Handler.handle(request10) |> IO.puts()
